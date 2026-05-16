@@ -4,7 +4,8 @@ import { Client } from 'pg'
 import fs from 'fs'
 
 const client = new Client({
-    connectionString: process.env.DATABASE_URL
+    connectionString:
+        process.env.DATABASE_URL
 });
 const OUTPUT_DIR = process.env.OUTPUT_DIR || 'src/routes';
 
