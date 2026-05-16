@@ -4,7 +4,7 @@
   "description": "npx function to dump a postgres database to express routes, using the kysely library",
   "repository": {
     "type": "git",
-    "url": "https://github.org/jonkofal/kysely-express-codegen"
+    "url": "https://github.com/jonkofal/kysely-express-codegen"
   },
   "license": "ISC",
   "author": "Zane Ray",
