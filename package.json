@@ -20,6 +20,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "test": "node test/test.js",
     "dev": "export $(grep -v '^#' .env | xargs) && ./bin/kysely-express-codegen.js"
   },
   "dependencies": {

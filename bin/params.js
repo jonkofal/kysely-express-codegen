@@ -8,7 +8,7 @@ export default async function params() {
     {
       name: 'output',
       description: 'Enter output directory',
-      default: './src/routes',
+      default: process.env.OUTPUT_DIR || './src/routes',
       required: true
     },
     {
