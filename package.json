@@ -18,9 +18,18 @@
     "npx-package": "bin/kysely-express-codegen.js"
   },
   "scripts": {
+    "build": "tsc",
     "dev": "export $(grep -v '^#' .env | xargs) && ./bin/kysely-express-codegen.js"
   },
   "dependencies": {
     "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.7.0",
+    "@types/pg": "^8.20.0",
+    "express": "^5.2.1",
+    "tsx": "^4.22.0",
+    "typescript": "^6.0.3"
   }
 }
