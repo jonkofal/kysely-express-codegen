@@ -2,20 +2,21 @@
   "name": "@ampsy/kysely-express-codegen",
   "version": "0.0.0",
   "description": "npx function to dump a postgres database to express routes, using the kysely library",
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.org/jonkofal/kysely-express-codegen.git"
   },
   "license": "ISC",
   "author": "Zane Ray",
+  "type": "module",
   "main": "bin/kysely-express-codegen.js",
-  "publishConfig": {
-    "access": "public"
-  },
   "bin": {
     "@ampsy/kysely-express-codegen": "bin/kysely-express-codegen.js",
-    "npx-package": "bin/kysely-express-codegen.js"
+    "kysely-express-codegen": "bin/kysely-express-codegen.js"
+  },
+  "directories": {
+    "doc": "doc",
+    "test": "test"
   },
   "scripts": {
     "build": "tsc",
@@ -31,5 +32,8 @@
     "express": "^5.2.1",
     "tsx": "^4.22.0",
     "typescript": "^6.0.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
