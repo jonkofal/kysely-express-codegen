@@ -2,12 +2,15 @@
 
 import { Client } from 'pg'
 import fs from 'fs'
+import params from './params.js';
+
+const result = await params();
+
+const OUTPUT_DIR = result.output;
 
 const client = new Client({
-    connectionString:
-        process.env.DATABASE_URL
+    connectionString: `postgresql://${result.username}:${result.password}@${result.host}:${result.port}/${result.database}`
 });
-const OUTPUT_DIR = process.env.OUTPUT_DIR || 'src/routes';
 
 function norm(str) {
     return str.replaceAll('_', '');
