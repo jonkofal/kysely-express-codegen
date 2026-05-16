@@ -18,7 +18,7 @@ JSON-SCHEMA
 add schema generation
 
 VALIDATION
-add validation
+add validation (optional, options?)
 
 TEST
 add build target to /dist ts->js
