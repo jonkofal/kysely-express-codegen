@@ -1,6 +1,6 @@
 {
   "name": "@ampsy/kysely-express-codegen",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "npx function to dump a postgres database to express routes, using the kysely library",
   "type": "module",
   "repository": {
