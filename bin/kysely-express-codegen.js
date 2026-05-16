@@ -2,40 +2,15 @@
 
 import { Client } from 'pg'
 import fs from 'fs'
-import { dirname } from 'path'
+import params from './params.js';
+
+const result = await params();
+
+const OUTPUT_DIR = result.output;
 
 const client = new Client({
-    connectionString:
-        process.env.DATABASE_URL ||
-        'postgres://postgres:password@localhost:5432/mydb',
+    connectionString: `postgresql://${result.username}:${result.password}@${result.host}:${result.port}/${result.database}`
 });
-const OUTPUT_DIR = process.env.OUTPUT_DIR || 'src/routes';
-
-const typeMap = {
-    uuid: 'string',
-    text: 'string',
-    varchar: 'string',
-    bpchar: 'string',
-    int2: 'number',
-    int4: 'number',
-    int8: 'number',
-    float4: 'number',
-    float8: 'number',
-    numeric: 'number',
-    bool: 'boolean',
-    date: 'Date',
-    timestamp: 'Date',
-    timestamptz: 'Date',
-    json: 'unknown',
-    jsonb: 'unknown',
-}
-
-function toPascalCase(str) {
-    return str
-        .split('_')
-        .map((s) => s[0].toUpperCase() + s.slice(1))
-        .join('');
-}
 
 function norm(str) {
     return str.replaceAll('_', '');
