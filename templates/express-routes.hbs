@@ -1,0 +1,13 @@
+import { Router } from 'express';
+
+{{#each this}}
+import {{name}}Router from './{{name}}.js';
+{{/each}}
+
+const router = Router();
+
+{{#each this}}
+router.use("/{{name}}", {{name}}Router);
+{{/each}}
+
+export default router;
