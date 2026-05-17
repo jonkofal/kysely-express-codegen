@@ -1,6 +1,6 @@
 # @ampsy/kysely-express-codegen
 
-A NPX executable to query a Postgres database and generate Kysely Typescript definitions and an Express Router to expose the Postgres database tables with a
+A NPX executable to query a Postgres database and generate Kysely Typescript definitions and an Typescript Express Router to expose the Postgres database tables with a
 REST API.
 
 ## Usage
@@ -10,6 +10,9 @@ Requires an accessible, running Postgres database.
 To generate code
 
 `npx @ampsy/kysely-express-codegen`
+
+- generates Kysely code in $OUTPUT_DIR/db
+- generates Express code in $OUTPUT_DIR/routes
 
 To feed values to the prompts, set the following Environment variables:
 
