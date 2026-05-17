@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
-import { Client } from 'pg'
 import fs from 'fs'
+import { Client } from 'pg'
 import params from './params.js';
-import expressRoutes from './express-routes.js';
-import kyselyTypes from './kysely-types.js';
+import Handlebars from 'handlebars';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const SCRIPT_PATH = fileURLToPath(import.meta.url);
+const SCRIPT_DIR = path.dirname(SCRIPT_PATH);
 
 async function main() {
     const result = await params();
@@ -13,7 +16,24 @@ async function main() {
     const tables = await getTables(`postgresql://${result.username}:${result.password}@${result.host}:${result.port}/${result.database}`);
     expressRoutes(tables, `${OUTPUT_DIR}/routes`);
     kyselyTypes(tables, `${OUTPUT_DIR}/db`);
+    expressIndex(OUTPUT_DIR);
 }
+
+Handlebars.registerHelper(
+    'tsType',
+    (type, nullable, name) => {
+        // generated primary key
+        if (name === 'id') {
+            return `Generated<${type}>`;
+        }
+        // nullable column
+        if (nullable === 'YES') {
+            return `${type} | null`;
+        }
+        // normal column
+        return type;
+    }
+);
 
 async function getTables(connectionString) {
     const client = new Client({ connectionString });
@@ -31,7 +51,7 @@ async function getTables(connectionString) {
     let tables = [];
     let table;
     for (const row of result.rows) {
-        if (! tables.find( table => table.name == row.table_name)) {
+        if (!tables.find(table => table.name == row.table_name)) {
             table = {};
             table.name = row.table_name;
             table.fields = [];
@@ -43,7 +63,7 @@ async function getTables(connectionString) {
         field.nullable = row.is_nullable;
         table.fields.push(field);
     }
-    console.log(JSON.stringify(tables));
+    // console.log(JSON.stringify(tables));
     await client.end();
     return tables;
 }
@@ -65,5 +85,31 @@ const typeMap = {
     timestamptz: 'Date',
     json: 'unknown',
     jsonb: 'unknown',
+}
+
+function expressIndex(outputDir) {
+    fs.copyFileSync(
+        path.join(SCRIPT_DIR, '..', 'templates', '/index.ts'),
+            path.join(outputDir, '/index.ts')
+        );
+}
+function kyselyTypes(tables, outputDir) {
+    const kyselyTypesHBS = fs.readFileSync(path.join(SCRIPT_DIR, '..', 'templates', '/kysely-types.hbs'), 'utf8');
+    const kyselyTypesTemplate = Handlebars.compile(kyselyTypesHBS);
+    fs.writeFileSync(`${outputDir}/types.d.ts`, kyselyTypesTemplate(tables));
+}
+
+function expressRoutes(tables, outputDir) {
+    fs.mkdirSync(outputDir, { recursive: true });
+    const expressRouteHBS = fs.readFileSync(path.join(SCRIPT_DIR, '..', 'templates', 'express-route.hbs'), 'utf8');
+    const expressRouteTemplate = Handlebars.compile(expressRouteHBS);
+    for (const table of tables) {
+        fs.writeFileSync(`${outputDir}/${table.name}.ts`, expressRouteTemplate(table));
+        console.log(`Generated ${outputDir}/${table.name}.ts`);
+    }
+    const expressRoutesHBS = fs.readFileSync(path.join(SCRIPT_DIR, '..', 'templates', 'express-routes.hbs'), 'utf8');
+    const expressRoutesTemplate = Handlebars.compile(expressRoutesHBS);
+    fs.writeFileSync(`${outputDir}/routes.ts`, expressRoutesTemplate(tables));
+    console.log(`Generated ${outputDir}/routes.ts`);
 }
 main().catch(console.error)
