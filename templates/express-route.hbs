@@ -1,0 +1,65 @@
+import { Router, Request, Response, NextFunction } from 'express'
+
+const {{name}}Router = Router()
+
+{{name}}Router.get('/', async (req: Request, res: Response, next: NextFunction ) => {
+    try {
+        const database = req.app.locals.database;
+        let query = database.selectFrom('{{name}}').selectAll();
+        const {
+{{#each fields}}
+            {{name}},
+{{/each}}
+        } = req.query;
+{{#each fields}}
+        if ({{name}}) {
+            query = query.where('{{name}}', '=', {{name}});
+        }
+{{/each}}
+        const result = await query.execute();
+        res.json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+{{name}}Router.get('/:id', async ( req: Request, res: Response, next: NextFunction ) => {
+    try {
+        const database = req.app.locals.database;
+        const { id } = req.params;
+        const result = await database.selectFrom('{{name}}').where('id', '=', id).selectAll().executeTakeFirst();
+        res.json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+{{name}}Router.post('/', async ( req: Request, res: Response, next: NextFunction ) => {
+    try {
+        const database = req.app.locals.database;
+        const result = await database.insertInto('{{name}}').values(req.body).returningAll().executeTakeFirstOrThrow();
+        res.json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+{{name}}Router.put('/', async ( req: Request, res: Response, next: NextFunction ) => {
+    try {
+        const database = req.app.locals.database;
+        const { id } = req.body;
+        const result = await database.updateTable('{{name}}').set(req.body).where('id', '=', id).execute();
+        res.json("OK");
+    } catch (error) {
+        next(error);
+    }
+});
+{{name}}Router.delete('/:id', async ( req: Request, res: Response, next: NextFunction ) => {
+    try {
+        const database = req.app.locals.database;
+        const { id } = req.params;
+        const result = await database.deleteFrom('{{name}}').where('id', '=', id).execute();
+        res.json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+
+export default {{name}}Router;
