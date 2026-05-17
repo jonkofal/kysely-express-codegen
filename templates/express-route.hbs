@@ -56,7 +56,7 @@ const {{name}}Router = Router()
         const database = req.app.locals.database;
         const { id } = req.params;
         const result = await database.deleteFrom('{{name}}').where('id', '=', id).execute();
-        res.json(result);
+        res.json("OK");
     } catch (error) {
         next(error);
     }
