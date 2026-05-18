@@ -1,10 +1,13 @@
 import get from '@ampsy/env'
-import { DB } from './db/types.js'
+import { Database } from './db/types.js'
 import { Pool } from 'pg'
 import { Kysely, PostgresDialect } from 'kysely'
 import express from 'express'
 
-import router from './routes/routes.js';
+import router from './routers/routers.js';
+{{#each this}}
+import {{pascalCase name}}Service from './services/{{pascalCase name}}Service.js';
+{{/each}}
 
 const app = express();
 app.use(express.json());
@@ -29,8 +32,10 @@ const dialect = new PostgresDialect({
   })
 });
 
-const database = new Kysely<DB>({dialect});
-app.locals.database = database;
+const database = new Kysely<Database>({dialect});
+{{#each this}}
+app.locals.{{camelCase name}}Service + new {{pascalCase name}}Service(database);
+{{/each}}
 
 app.use(`${BASE_URL}`, [router]);
 

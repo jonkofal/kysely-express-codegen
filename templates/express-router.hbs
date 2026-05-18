@@ -1,0 +1,100 @@
+import { Router, Request, Response, NextFunction } from 'express'
+import { {{pascalCase name}}FilterSchema, {{pascalCase name}}InsertSchema, {{pascalCase name}}UpdateSchema } from '../db/types.js';
+import { z } from 'zod';
+{{#each children}}
+import { {{pascalCase this}}FilterSchema } from '../db/types.js';
+{{/each}}
+
+const {{camelCase name}}Router = Router();
+
+{{camelCase name}}Router.get('/', async (req: Request, res: Response, next: NextFunction ) => {
+    try {
+        const result = {{pascalCase name}}FilterSchema.safeParse(req.query);
+        if (!result.success) {
+            return res.status(400).json(z.treeifyError(result.error));
+        }
+        const retVal = await req.app.locals.{{camelCase name}}Service.selectWithFilter(result.data);
+        res.json(retVal);
+    } catch (error) {
+        next(error);
+    }
+});
+{{camelCase name}}Router.get('/:id', async ( req: Request, res: Response, next: NextFunction ) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json(`{"error": "id must be defined"}`);
+        }
+        const retVal = await req.app.locals.{{camelCase name}}Service.selectOne(id);
+        res.json(retVal);
+    } catch (error) {
+        next(error);
+    }
+});
+{{camelCase name}}Router.post('/', async ( req: Request, res: Response, next: NextFunction ) => {
+    try {
+        const result = {{pascalCase name}}InsertSchema.safeParse(req.body);
+        if (!result.success) {
+            return res.status(400).json(z.treeifyError(result.error));
+        }
+        const retVal = await req.app.locals.{{camelCase name}}Service.insert(result.data);
+        res.json(retVal);
+    } catch (error) {
+        next(error);
+    }
+});
+{{camelCase name}}Router.put('/', async ( req: Request, res: Response, next: NextFunction ) => {
+    try {
+        const result = {{pascalCase name}}InsertSchema.safeParse(req.body);
+        if (!result.success) {
+            return res.status(400).json(z.treeifyError(result.error));
+        }
+        const retVal = await req.app.locals.{{camelCase name}}Service.update(result.data);
+        res.json("OK");
+    } catch (error) {
+        next(error);
+    }
+});
+{{camelCase name}}Router.delete('/:id', async ( req: Request, res: Response, next: NextFunction ) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json(`{"error": "id must be defined"}`);
+        }
+        const retVal = await req.app.locals.{{camelCase name}}Service.delete(id);
+        res.json("OK");
+    } catch (error) {
+        next(error);
+    }
+});
+{{#each children}}
+{{camelCase  ../name}}Router.get('/:id/{{this}}', async ( req: Request, res: Response, next: NextFunction ) => {
+    try {
+        const { id } = req.params;
+        const filter = { '{{../name}}_id': id };
+        const result = {{pascalCase this}}FilterSchema.safeParse(filter);
+        if (!result.success) {
+            return res.status(400).json(z.treeifyError(result.error));
+        }
+        const retVal = await req.app.locals.{{camelCase this}}Service.selectWithFilter(result.data);
+        res.json(retVal);
+    } catch (error) {
+        next(error);
+    }
+});
+{{camelCase ../name}}Router.get('/:id/{{this}}/:{{this}}_id', async ( req: Request, res: Response, next: NextFunction ) => {
+    try {
+        const { id, {{this}}_id } = req.params;
+        const filter = { 'id': {{this}}_id };
+        const result = {{pascalCase this}}FilterSchema.safeParse(filter);
+        if (!result.success) {
+            return res.status(400).json(z.treeifyError(result.error));
+        }
+        const retVal = await req.app.locals.{{camelCase this}}Service.selectWithFilter(result.data);
+        res.json(retVal);
+    } catch (error) {
+        next(error);
+    }
+});
+{{/each}}
+export default {{camelCase name}}Router;
