@@ -1,4 +1,4 @@
-import { Database, {{pascalCase name}}, {{pascalCase name}}Filter } from '../db/types.js';
+import { Database, {{pascalCase name}}, {{pascalCase name}}Filter, {{pascalCase name}}Insert, {{pascalCase name}}Update } from '../db/types.js';
 import { Kysely } from 'kysely'
 
 export default class {{pascalCase name}}Service {
@@ -30,12 +30,12 @@ constructor(private database: Kysely<Database>) {}
         const retVal = await query.execute();
         return retVal
     }
-    async insert({{camelCase name}}: {{pascalCase name}}) {
+    async insert({{camelCase name}}: {{pascalCase name}}Insert) {
         const retVal = await this.database.insertInto('{{name}}').values({{camelCase name}}).returningAll().executeTakeFirstOrThrow();
         return retVal;
     }
-    async update({{camelCase name}}: {{pascalCase name}}) {
-        const retVal = await this.database.updateTable('{{name}}').set({{camelCase name}}).where('id', '=', {{camelCase name}}_id).execute();
+    async update({{camelCase name}}: {{pascalCase name}}Update) {
+        const retVal = await this.database.updateTable('{{name}}').set({{camelCase name}}).where('id', '=', {{camelCase name}}.id).execute();
         return retVal;
     }
     async delete(id: string) {

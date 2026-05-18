@@ -194,8 +194,8 @@ function kyselyServices(tables, outputDir) {
 function kyselyTypes(tables, outputDir) {
     const hbs = fs.readFileSync(path.join(SCRIPT_DIR, '..', 'templates', '/kysely-types.hbs'), 'utf8');
     const template = Handlebars.compile(hbs);
-    fs.writeFileSync(`${outputDir}/types.d.ts`, template(tables));
-    console.log(`Generated ${outputDir}/types.d.ts`);
+    fs.writeFileSync(`${outputDir}/types.ts`, template(tables));
+    console.log(`Generated ${outputDir}/types.ts`);
 }
 
 function expressRouters(tables, outputDir) {
