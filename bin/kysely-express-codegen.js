@@ -6,19 +6,78 @@ import params from './params.js';
 import Handlebars from 'handlebars';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pascalCase, camelCase } from 'change-case';
+
 const SCRIPT_PATH = fileURLToPath(import.meta.url);
 const SCRIPT_DIR = path.dirname(SCRIPT_PATH);
 
 async function main() {
     const result = await params();
     const OUTPUT_DIR = result.output;
+    const connectionString = `postgresql://${result.username}:${result.password}@${result.host}:${result.port}/${result.database}`;
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-    const tables = await getTables(`postgresql://${result.username}:${result.password}@${result.host}:${result.port}/${result.database}`);
-    expressRoutes(tables, `${OUTPUT_DIR}/routes`);
+    const tables = await getTables(connectionString);
+    console.log(JSON.stringify(tables));
     kyselyTypes(tables, `${OUTPUT_DIR}/db`);
-    expressIndex(OUTPUT_DIR);
+    kyselyServices(tables, `${OUTPUT_DIR}/services`);
+    expressRouters(tables, `${OUTPUT_DIR}/routers`);
+    expressIndex(tables, OUTPUT_DIR);
 }
-
+Handlebars.registerHelper("pascalCase", value => {
+    return pascalCase(value);
+});
+Handlebars.registerHelper("camelCase", value => {
+    return camelCase(value);
+});
+Handlebars.registerHelper(
+    'filterType',
+    (type) => {
+        if (type === 'number')
+            return `z.coerce.number().optional()`;
+        if (type === 'Date')
+            return `z.coerce.date().optional()`;
+        return `z.string().optional()`;
+    });
+Handlebars.registerHelper(
+    'insertType',
+    (name, type, nullable) => {
+        let retVal = "";
+        if (name !== 'id' && name !== 'created_at') {
+            retVal = `${name}: `;
+            if (type === 'number') {
+                retVal = `${retVal}z.coerce.number()`;
+            } else if (type === 'Date') {
+                retVal = `${retVal}z.coerce.date()`;
+            } else {
+                retVal = `${retVal}z.string()`;
+            }
+            if (nullable === 'YES') {
+                retVal = `${retVal}.optional()`
+            }
+            retVal = `${retVal},`
+        }
+        return retVal;
+    });
+Handlebars.registerHelper(
+    'updateType',
+    (name, type) => {
+        let retVal = ``;
+        if (name !== 'created_at') {
+            retVal = `${name}: `;
+            if (type === 'number') {
+                retVal = `${retVal}z.coerce.number()`;
+            } else if (type === 'Date') {
+                retVal = `${retVal}z.coerce.date()`;
+            } else {
+                retVal = `${retVal}z.string()`;
+            }
+            if (name !== 'id') {
+                retVal = `${retVal}.optional()`
+            }
+            retVal = `${retVal},`
+        }
+        return retVal;
+    });
 Handlebars.registerHelper(
     'tsType',
     (type, nullable, name) => {
@@ -62,12 +121,41 @@ async function getTables(connectionString) {
         field.type = typeMap[row.udt_name];
         field.nullable = row.is_nullable;
         table.fields.push(field);
+        table.children = [];
     }
-    // console.log(JSON.stringify(tables));
+    for (const table of tables) {
+        const foreignKeys = await getForeignKeys(client, table.name);
+        for (const foreignKey of foreignKeys) {
+            let foreignTable = tables.find(t => t.name === foreignKey.foreign_table_name);
+            foreignTable.children.push(foreignKey.table_name);
+        }
+        table.foreign_keys = foreignKeys;
+    }
     await client.end();
     return tables;
 }
-
+async function getForeignKeys(client, tableName) {
+    const result = await client.query(`
+    SELECT
+      tc.constraint_name,
+      tc.table_name,
+      kcu.column_name,
+      ccu.table_name AS foreign_table_name,
+      ccu.column_name AS foreign_column_name
+    FROM
+      information_schema.table_constraints AS tc
+      JOIN information_schema.key_column_usage AS kcu
+        ON tc.constraint_name = kcu.constraint_name
+      JOIN information_schema.constraint_column_usage AS ccu
+        ON ccu.constraint_name = tc.constraint_name
+    WHERE
+      tc.constraint_type = 'FOREIGN KEY'
+      AND tc.table_name = $1
+    ORDER BY
+      tc.constraint_name;
+  `, [tableName]);
+    return result.rows;
+}
 const typeMap = {
     uuid: 'string',
     text: 'string',
@@ -87,29 +175,40 @@ const typeMap = {
     jsonb: 'unknown',
 }
 
-function expressIndex(outputDir) {
-    fs.copyFileSync(
-        path.join(SCRIPT_DIR, '..', 'templates', '/index.ts'),
-            path.join(outputDir, '/index.ts')
-        );
+function expressIndex(tables, outputDir) {
+    fs.mkdirSync(outputDir, { recursive: true });
+    const hbs = fs.readFileSync(path.join(SCRIPT_DIR, '..', 'templates', 'index.hbs'), 'utf8');
+    const template = Handlebars.compile(hbs);
+    fs.writeFileSync(`${outputDir}/index.ts`, template(tables));
+    console.log(`Generated ${outputDir}/index.ts`);
+}
+function kyselyServices(tables, outputDir) {
+    fs.mkdirSync(outputDir, { recursive: true });
+    const hbs = fs.readFileSync(path.join(SCRIPT_DIR, '..', 'templates', 'kysely-service.hbs'), 'utf8');
+    const template = Handlebars.compile(hbs);
+    for (const table of tables) {
+        fs.writeFileSync(`${outputDir}/${pascalCase(table.name)}Service.ts`, template(table));
+        console.log(`Generated ${outputDir}/${pascalCase(table.name)}Service.ts`);
+    }
 }
 function kyselyTypes(tables, outputDir) {
-    const kyselyTypesHBS = fs.readFileSync(path.join(SCRIPT_DIR, '..', 'templates', '/kysely-types.hbs'), 'utf8');
-    const kyselyTypesTemplate = Handlebars.compile(kyselyTypesHBS);
-    fs.writeFileSync(`${outputDir}/types.d.ts`, kyselyTypesTemplate(tables));
+    const hbs = fs.readFileSync(path.join(SCRIPT_DIR, '..', 'templates', '/kysely-types.hbs'), 'utf8');
+    const template = Handlebars.compile(hbs);
+    fs.writeFileSync(`${outputDir}/types.ts`, template(tables));
+    console.log(`Generated ${outputDir}/types.ts`);
 }
 
-function expressRoutes(tables, outputDir) {
+function expressRouters(tables, outputDir) {
     fs.mkdirSync(outputDir, { recursive: true });
-    const expressRouteHBS = fs.readFileSync(path.join(SCRIPT_DIR, '..', 'templates', 'express-route.hbs'), 'utf8');
-    const expressRouteTemplate = Handlebars.compile(expressRouteHBS);
+    let hbs = fs.readFileSync(path.join(SCRIPT_DIR, '..', 'templates', 'express-router.hbs'), 'utf8');
+    let template = Handlebars.compile(hbs);
     for (const table of tables) {
-        fs.writeFileSync(`${outputDir}/${table.name}.ts`, expressRouteTemplate(table));
-        console.log(`Generated ${outputDir}/${table.name}.ts`);
+        fs.writeFileSync(`${outputDir}/${camelCase(table.name)}Router.ts`, template(table));
+        console.log(`Generated ${outputDir}/${camelCase(table.name)}Router.ts`);
     }
-    const expressRoutesHBS = fs.readFileSync(path.join(SCRIPT_DIR, '..', 'templates', 'express-routes.hbs'), 'utf8');
-    const expressRoutesTemplate = Handlebars.compile(expressRoutesHBS);
-    fs.writeFileSync(`${outputDir}/routes.ts`, expressRoutesTemplate(tables));
-    console.log(`Generated ${outputDir}/routes.ts`);
+    hbs = fs.readFileSync(path.join(SCRIPT_DIR, '..', 'templates', 'express-routers.hbs'), 'utf8');
+    template = Handlebars.compile(hbs);
+    fs.writeFileSync(`${outputDir}/routers.ts`, template(tables));
+    console.log(`Generated ${outputDir}/routers.ts`);
 }
 main().catch(console.error)

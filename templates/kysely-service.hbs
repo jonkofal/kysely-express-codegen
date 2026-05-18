@@ -1,0 +1,57 @@
+import { Database, {{pascalCase name}}, {{pascalCase name}}Filter, {{pascalCase name}}Insert, {{pascalCase name}}Update } from '../db/types.js';
+import { Kysely } from 'kysely'
+
+export default class {{pascalCase name}}Service {
+
+constructor(private database: Kysely<Database>) {}
+
+    async selectOne(id: string) {
+        const retVal = await this.database
+            .selectFrom('{{name}}')
+            .where('id', '=', id)
+            .selectAll()
+            .executeTakeFirst();
+        return retVal;
+    }
+    async selectAll() {
+        const retVal = await this.selectWithFilter({});
+        return retVal;
+    }
+    async selectWithFilter(filter: {{pascalCase name}}Filter) {
+        let query = this.database
+            .selectFrom('{{name}}')
+            .selectAll();
+{{#each fields}}
+        // query = whereOptional(query, "{{name}}", filter.{{name}});
+        if (filter.{{name}}) {
+            query = query.where('{{name}}', '=', filter.{{name}});
+        }
+{{/each}}
+        const retVal = await query.execute();
+        return retVal
+    }
+    async insert({{camelCase name}}: {{pascalCase name}}Insert) {
+        const retVal = await this.database.insertInto('{{name}}').values({{camelCase name}}).returningAll().executeTakeFirstOrThrow();
+        return retVal;
+    }
+    async update({{camelCase name}}: {{pascalCase name}}Update) {
+        const retVal = await this.database.updateTable('{{name}}').set({{camelCase name}}).where('id', '=', {{camelCase name}}.id).execute();
+        return retVal;
+    }
+    async delete(id: string) {
+        const retVal = await this.database.deleteFrom('{{name}}').where('id', '=', id).execute();
+        return retVal;
+    }
+}
+// this has some error, but if fixed will make the query building simpler
+// type {{pascalCase name}}QB = SelectQueryBuilder<Database, "{{name}}", any>;
+// type {{pascalCase name}}Row = Selectable<{{name}}>;
+// function whereOptional<K extends keyof {{pascalCase name}}Row>(
+//   qb: {{pascalCase name}}QB,
+//   column: K,
+//   value: {{pascalCase name}}Row[K] | undefined
+// ) {
+//   return value === undefined
+//     ? qb
+//     : qb.where(column, "=", value);
+// }

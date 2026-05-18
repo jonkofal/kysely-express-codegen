@@ -1,4 +1,5 @@
 import type { ColumnType } from "kysely";
+import { z } from "zod";
 
 export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
@@ -14,14 +15,33 @@ export type Numeric = ColumnType<string, number | string, number | string>;
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 {{#each this}}
-export interface {{name}} {
+export interface {{pascalCase name}} {
 {{#each fields}}
     {{name}}: {{{tsType type nullable name}}};
 {{/each}}
 }
+export const {{pascalCase name}}FilterSchema = z.object({
+{{#each fields}}
+    {{name}}: {{filterType type}},
 {{/each}}
-export interface DB {
+});
+export type {{pascalCase name}}Filter = z.infer<typeof {{pascalCase name}}FilterSchema>;
+export const {{pascalCase name}}InsertSchema = z.object({
+{{#each fields}}
+    {{insertType name type nullable}}
+{{/each}}
+});
+export type {{pascalCase name}}Insert = z.infer<typeof {{pascalCase name}}InsertSchema>;
+export const {{pascalCase name}}UpdateSchema = z.object({
+{{#each fields}}
+    {{updateType name type}}
+{{/each}}
+});
+export type {{pascalCase name}}Update = z.infer<typeof {{pascalCase name}}UpdateSchema>;
+{{/each}}
+
+export interface Database {
 {{#each this}}
-    {{name}}: {{name}};
+    {{name}}: {{pascalCase name}};
 {{/each}}
 }
