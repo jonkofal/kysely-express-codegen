@@ -1,134 +1,169 @@
-{
-    "tables": [
-        {
-            "name": "customers",
-            "fields": [
-                {
-                    "name": "id",
-                    "type": "string",
-                    "nullable": "NO"
-                },
-                {
-                    "name": "email",
-                    "type": "string",
-                    "nullable": "NO"
-                },
-                {
-                    "name": "first_name",
-                    "type": "string",
-                    "nullable": "YES"
-                },
-                {
-                    "name": "last_name",
-                    "type": "string",
-                    "nullable": "YES"
-                },
-                {
-                    "name": "created_at",
-                    "type": "Date",
-                    "nullable": "YES"
-                }
-            ]
-        },
-        {
-            "name": "order_items",
-            "fields": [
-                {
-                    "name": "id",
-                    "type": "string",
-                    "nullable": "NO"
-                },
-                {
-                    "name": "order_id",
-                    "type": "string",
-                    "nullable": "YES"
-                },
-                {
-                    "name": "product_id",
-                    "type": "string",
-                    "nullable": "YES"
-                },
-                {
-                    "name": "quantity",
-                    "type": "number",
-                    "nullable": "NO"
-                },
-                {
-                    "name": "price",
-                    "type": "number",
-                    "nullable": "NO"
-                }
-            ]
-        },
-        {
-            "name": "orders",
-            "fields": [
-                {
-                    "name": "id",
-                    "type": "string",
-                    "nullable": "NO"
-                },
-                {
-                    "name": "customer_id",
-                    "type": "string",
-                    "nullable": "YES"
-                },
-                {
-                    "name": "status",
-                    "type": "string",
-                    "nullable": "NO"
-                },
-                {
-                    "name": "total",
-                    "type": "number",
-                    "nullable": "NO"
-                },
-                {
-                    "name": "created_at",
-                    "type": "Date",
-                    "nullable": "YES"
-                }
-            ]
-        },
-        {
-            "name": "products",
-            "fields": [
-                {
-                    "name": "id",
-                    "type": "string",
-                    "nullable": "NO"
-                },
-                {
-                    "name": "sku",
-                    "type": "string",
-                    "nullable": "NO"
-                },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "nullable": "NO"
-                },
-                {
-                    "name": "description",
-                    "type": "string",
-                    "nullable": "YES"
-                },
-                {
-                    "name": "price",
-                    "type": "number",
-                    "nullable": "NO"
-                },
-                {
-                    "name": "attributes",
-                    "type": "unknown",
-                    "nullable": "YES"
-                },
-                {
-                    "name": "created_at",
-                    "type": "Date",
-                    "nullable": "YES"
-                }
-            ]
-        }
-    ]
-}
+[
+    {
+        "name": "customers",
+        "fields": [
+            {
+                "name": "id",
+                "type": "string",
+                "nullable": "NO"
+            },
+            {
+                "name": "email",
+                "type": "string",
+                "nullable": "NO"
+            },
+            {
+                "name": "first_name",
+                "type": "string",
+                "nullable": "YES"
+            },
+            {
+                "name": "last_name",
+                "type": "string",
+                "nullable": "YES"
+            },
+            {
+                "name": "created_at",
+                "type": "Date",
+                "nullable": "YES"
+            }
+        ],
+        "children": [
+            "orders"
+        ],
+        "foreign_keys": []
+    },
+    {
+        "name": "order_items",
+        "fields": [
+            {
+                "name": "id",
+                "type": "string",
+                "nullable": "NO"
+            },
+            {
+                "name": "order_id",
+                "type": "string",
+                "nullable": "YES"
+            },
+            {
+                "name": "product_id",
+                "type": "string",
+                "nullable": "YES"
+            },
+            {
+                "name": "quantity",
+                "type": "number",
+                "nullable": "NO"
+            },
+            {
+                "name": "price",
+                "type": "number",
+                "nullable": "NO"
+            }
+        ],
+        "children": [],
+        "foreign_keys": [
+            {
+                "constraint_name": "fk_order_items_orders",
+                "table_name": "order_items",
+                "column_name": "order_id",
+                "foreign_table_name": "orders",
+                "foreign_column_name": "id"
+            },
+            {
+                "constraint_name": "fk_order_items_products",
+                "table_name": "order_items",
+                "column_name": "product_id",
+                "foreign_table_name": "products",
+                "foreign_column_name": "id"
+            }
+        ]
+    },
+    {
+        "name": "orders",
+        "fields": [
+            {
+                "name": "id",
+                "type": "string",
+                "nullable": "NO"
+            },
+            {
+                "name": "customer_id",
+                "type": "string",
+                "nullable": "YES"
+            },
+            {
+                "name": "status",
+                "type": "string",
+                "nullable": "NO"
+            },
+            {
+                "name": "total",
+                "type": "number",
+                "nullable": "NO"
+            },
+            {
+                "name": "created_at",
+                "type": "Date",
+                "nullable": "YES"
+            }
+        ],
+        "children": [
+            "order_items"
+        ],
+        "foreign_keys": [
+            {
+                "constraint_name": "fk_orders_customers",
+                "table_name": "orders",
+                "column_name": "customer_id",
+                "foreign_table_name": "customers",
+                "foreign_column_name": "id"
+            }
+        ]
+    },
+    {
+        "name": "products",
+        "fields": [
+            {
+                "name": "id",
+                "type": "string",
+                "nullable": "NO"
+            },
+            {
+                "name": "sku",
+                "type": "string",
+                "nullable": "NO"
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "nullable": "NO"
+            },
+            {
+                "name": "description",
+                "type": "string",
+                "nullable": "YES"
+            },
+            {
+                "name": "price",
+                "type": "number",
+                "nullable": "NO"
+            },
+            {
+                "name": "attributes",
+                "type": "unknown",
+                "nullable": "YES"
+            },
+            {
+                "name": "created_at",
+                "type": "Date",
+                "nullable": "YES"
+            }
+        ],
+        "children": [
+            "order_items"
+        ],
+        "foreign_keys": []
+    }
+]

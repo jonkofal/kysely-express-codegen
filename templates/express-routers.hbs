@@ -1,13 +1,13 @@
 import { Router } from 'express';
 
 {{#each this}}
-import {{name}}Router from './{{name}}.js';
+import {{camelCase name}}Router from './{{camelCase name}}Router.js';
 {{/each}}
 
 const router = Router();
 
 {{#each this}}
-router.use("/{{name}}", {{name}}Router);
+router.use("/{{camelCase name}}", {{camelCase name}}Router);
 {{/each}}
 
 export default router;

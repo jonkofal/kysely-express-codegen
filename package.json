@@ -24,6 +24,7 @@
     "dev": "export $(grep -v '^#' .env | xargs) && ./bin/kysely-express-codegen.js"
   },
   "dependencies": {
+    "change-case": "^5.4.4",
     "handlebars": "^4.7.9",
     "optimist": "^0.5.2",
     "pg": "^8.20.0",
